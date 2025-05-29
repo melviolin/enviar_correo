@@ -2,7 +2,7 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
@@ -21,8 +21,6 @@ async def enviar_correo(data: EmailData):
         smtp_server = os.getenv("SMTP_SERVER")
         smtp_port = int(os.getenv("SMTP_PORT", 587))
 
-        print("Datos SMTP:", smtp_user, smtp_server, smtp_port)
-
         mensaje = MIMEMultipart()
         mensaje["From"] = smtp_user
         mensaje["To"] = data.to
@@ -37,5 +35,4 @@ async def enviar_correo(data: EmailData):
         return {"status": "ok", "message": "Correo enviado"}
 
     except Exception as e:
-        print("Error:", str(e))
         return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
