@@ -1,17 +1,21 @@
 import os
 import smtplib
+import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+def log(mensaje):
+    print(f"[{datetime.datetime.now().isoformat()}] {mensaje}")
+
 @app.route("/enviar", methods=["POST"])
 def enviar():
-    print("Inicio de la función enviar()")
+    log("Inicio de la función enviar()")
 
     data = request.get_json()
-    print("Datos recibidos:", data)
+    log(f"Datos recibidos: {data}")
 
     destinatario = data.get("to")
     asunto = data.get("subject")
@@ -22,17 +26,10 @@ def enviar():
     smtp_server = os.getenv("SMTP_SERVER")
     smtp_port = int(os.getenv("SMTP_PORT", 587))
 
-    print(f"SMTP Config -> user: {smtp_user}, server: {smtp_server}, port: {smtp_port}")
+    log(f"SMTP Config -> user: {smtp_user}, server: {smtp_server}, port: {smtp_port}")
 
-    return jsonify({
-        "destinatario": destinatario,
-        "asunto": asunto,
-        "mensaje": mensaje_html,
-        "user": smtp_user,
-        "pass": smtp_pass,
-        "server": smtp_server,
-        "port": smtp_port
-    }), 400
+    if not all([destinatario, asunto, mensaje_html, smtp_user, smtp_pass, smtp_server]):
+        return jsonify({"status": "error", "message": "Faltan datos o configuración SMTP"}), 400
 
     mensaje = MIMEMultipart()
     mensaje["From"] = smtp_user
@@ -41,18 +38,18 @@ def enviar():
     mensaje.attach(MIMEText(mensaje_html, "html"))
 
     try:
-        print("Conectando al servidor SMTP...")
-        with smtplib.SMTP(smtp_server, smtp_port) as servidor:
-            print("Iniciando TLS...")
+        log("Conectando al servidor SMTP...")
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=10) as servidor:
+            log("Iniciando TLS...")
             servidor.starttls()
-            print("Haciendo login...")
+            log("Haciendo login...")
             servidor.login(smtp_user, smtp_pass)
-            print("Enviando mensaje...")
+            log("Enviando mensaje...")
             servidor.send_message(mensaje)
-            print("Correo enviado con éxito")
+            log("Correo enviado con éxito")
             return jsonify({"status": "ok", "message": "Correo enviado"})
     except Exception as e:
-        print("Error enviando correo:", e)
+        log(f"Error enviando correo: {e}")
         return jsonify({"status": "error", "message": str(e)})
 
 if __name__ == "__main__":
