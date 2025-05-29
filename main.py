@@ -1,4 +1,3 @@
-import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -16,11 +15,10 @@ class EmailData(BaseModel):
 @app.post("/enviar")
 async def enviar_correo(data: EmailData):
     try:
-
         smtp_user = "contacto@melviolin.com"
         smtp_pass = "ZkND#xgjKLdY"
         smtp_server = "melviolin.com"
-        smtp_port = "465"
+        smtp_port = 465  # entero
 
         mensaje = MIMEMultipart()
         mensaje["From"] = smtp_user
@@ -28,8 +26,8 @@ async def enviar_correo(data: EmailData):
         mensaje["Subject"] = data.subject
         mensaje.attach(MIMEText(data.html, "html"))
 
-        with smtplib.SMTP(smtp_server, smtp_port, timeout=15) as servidor:
-            servidor.starttls()
+        # Usar SMTP_SSL para puerto 465
+        with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=15) as servidor:
             servidor.login(smtp_user, smtp_pass)
             servidor.send_message(mensaje)
 
