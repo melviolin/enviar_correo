@@ -16,10 +16,11 @@ class EmailData(BaseModel):
 @app.post("/enviar")
 async def enviar_correo(data: EmailData):
     try:
-        smtp_user = os.getenv("SMTP_USER")
-        smtp_pass = os.getenv("SMTP_PASS")
-        smtp_server = os.getenv("SMTP_SERVER")
-        smtp_port = int(os.getenv("SMTP_PORT", 587))
+
+        smtp_user = "contacto@melviolin.com"
+        smtp_pass = "ZkND#xgjKLdY"
+        smtp_server = "melviolin.com"
+        smtp_port = "465"
 
         mensaje = MIMEMultipart()
         mensaje["From"] = smtp_user
