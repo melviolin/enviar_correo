@@ -18,14 +18,15 @@ def enviar():
     smtp_server = os.getenv("SMTP_SERVER")
     smtp_port = int(os.getenv("SMTP_PORT", 587))
 
+    # Validación dentro de la función
+    if not all([destinatario, asunto, mensaje_html, smtp_user, smtp_pass, smtp_server]):
+        return jsonify({"status": "error", "message": "Faltan datos o configuración SMTP"}), 400
+
     mensaje = MIMEMultipart()
     mensaje["From"] = smtp_user
     mensaje["To"] = destinatario
     mensaje["Subject"] = asunto
     mensaje.attach(MIMEText(mensaje_html, "html"))
-
-if not all([destinatario, asunto, mensaje_html, smtp_user, smtp_pass, smtp_server]):
-    return jsonify({"status": "error", "message": "Faltan datos o configuración SMTP"}), 400
 
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as servidor:
