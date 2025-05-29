@@ -7,6 +7,10 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+
 def log(mensaje):
     print(f"[{datetime.datetime.now().isoformat()}] {mensaje}")
 
