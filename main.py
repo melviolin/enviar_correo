@@ -1,38 +1,37 @@
-# main.py
-from fastapi import FastAPI, Request
-from pydantic import BaseModel
+import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import os
+from flask import Flask, request, jsonify
 
-app = FastAPI()
+app = Flask(__name__)
 
-class EmailData(BaseModel):
-    to: str
-    subject: str
-    html: str
+@app.route("/enviar", methods=["POST"])
+def enviar():
+    data = request.get_json()
+    destinatario = data.get("to")
+    asunto = data.get("subject")
+    mensaje_html = data.get("html")
 
-@app.post("/send-email")
-def send_email(data: EmailData):
-    remitente = os.getenv("SMTP_USER")
-    password = os.getenv("SMTP_PASS")
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_pass = os.getenv("SMTP_PASS")
     smtp_server = os.getenv("SMTP_SERVER")
     smtp_port = int(os.getenv("SMTP_PORT", 587))
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = data.subject
-    msg["From"] = remitente
-    msg["To"] = data.to
-
-    msg.attach(MIMEText(data.html, "html"))
+    mensaje = MIMEMultipart()
+    mensaje["From"] = smtp_user
+    mensaje["To"] = destinatario
+    mensaje["Subject"] = asunto
+    mensaje.attach(MIMEText(mensaje_html, "html"))
 
     try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-        server.login(remitente, password)
-        server.sendmail(remitente, data.to, msg.as_string())
-        server.quit()
-        return {"status": "enviado"}
+        with smtplib.SMTP(smtp_server, smtp_port) as servidor:
+            servidor.starttls()
+            servidor.login(smtp_user, smtp_pass)
+            servidor.send_message(mensaje)
+            return jsonify({"status": "ok", "message": "Correo enviado"})
     except Exception as e:
-        return {"status": "error", "detalle": str(e)}
+        return jsonify({"status": "error", "message": str(e)})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
