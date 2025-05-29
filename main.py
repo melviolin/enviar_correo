@@ -24,6 +24,9 @@ def enviar():
     mensaje["Subject"] = asunto
     mensaje.attach(MIMEText(mensaje_html, "html"))
 
+if not all([destinatario, asunto, mensaje_html, smtp_user, smtp_pass, smtp_server]):
+    return jsonify({"status": "error", "message": "Faltan datos o configuración SMTP"}), 400
+
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as servidor:
             servidor.starttls()
