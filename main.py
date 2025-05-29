@@ -24,10 +24,8 @@ def enviar():
 
     print(f"SMTP Config -> user: {smtp_user}, server: {smtp_server}, port: {smtp_port}")
 
-    # Validación dentro de la función
-    if not all([destinatario, asunto, mensaje_html, smtp_user, smtp_pass, smtp_server]):
-        print("Error: faltan datos o configuración SMTP")
-        return jsonify({"status": "error", "message": "Faltan datos o configuración SMTP"}), 400
+    return jsonify({
+        "destinatario": destinatario}), 400
 
     mensaje = MIMEMultipart()
     mensaje["From"] = smtp_user
