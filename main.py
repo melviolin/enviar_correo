@@ -25,7 +25,14 @@ def enviar():
     print(f"SMTP Config -> user: {smtp_user}, server: {smtp_server}, port: {smtp_port}")
 
     return jsonify({
-        "destinatario": destinatario}), 400
+        "destinatario": destinatario,
+        "asunto": asunto,
+        "mensaje": mensaje_html,
+        "user": smtp_user,
+        "pass": smtp_pass
+        "server": smtp_server,
+        "port": smtp_port
+    }), 400
 
     mensaje = MIMEMultipart()
     mensaje["From"] = smtp_user
