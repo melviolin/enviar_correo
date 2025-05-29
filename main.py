@@ -1,60 +1,41 @@
 import os
 import smtplib
-import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
+from starlette.responses import JSONResponse
 
-app = Flask(__name__)
+app = FastAPI()
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+class EmailData(BaseModel):
+    to: str
+    subject: str
+    html: str
 
-
-def log(mensaje):
-    print(f"[{datetime.datetime.now().isoformat()}] {mensaje}")
-
-@app.route("/enviar", methods=["POST"])
-def enviar():
-    log("Inicio de la función enviar()")
-
-    data = request.get_json()
-    log(f"Datos recibidos: {data}")
-
-    destinatario = data.get("to")
-    asunto = data.get("subject")
-    mensaje_html = data.get("html")
-
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_pass = os.getenv("SMTP_PASS")
-    smtp_server = os.getenv("SMTP_SERVER")
-    smtp_port = int(os.getenv("SMTP_PORT", 587))
-
-    log(f"SMTP Config -> user: {smtp_user}, server: {smtp_server}, port: {smtp_port}")
-
-    if not all([destinatario, asunto, mensaje_html, smtp_user, smtp_pass, smtp_server]):
-        return jsonify({"status": "error", "message": "Faltan datos o configuración SMTP"}), 400
-
-    mensaje = MIMEMultipart()
-    mensaje["From"] = smtp_user
-    mensaje["To"] = destinatario
-    mensaje["Subject"] = asunto
-    mensaje.attach(MIMEText(mensaje_html, "html"))
-
+@app.post("/enviar")
+async def enviar_correo(data: EmailData):
     try:
-        log("Conectando al servidor SMTP...")
-        with smtplib.SMTP(smtp_server, smtp_port, timeout=10) as servidor:
-            log("Iniciando TLS...")
-            servidor.starttls()
-            log("Haciendo login...")
-            servidor.login(smtp_user, smtp_pass)
-            log("Enviando mensaje...")
-            servidor.send_message(mensaje)
-            log("Correo enviado con éxito")
-            return jsonify({"status": "ok", "message": "Correo enviado"})
-    except Exception as e:
-        log(f"Error enviando correo: {e}")
-        return jsonify({"status": "error", "message": str(e)})
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_pass = os.getenv("SMTP_PASS")
+        smtp_server = os.getenv("SMTP_SERVER")
+        smtp_port = int(os.getenv("SMTP_PORT", 587))
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+        print("Datos SMTP:", smtp_user, smtp_server, smtp_port)
+
+        mensaje = MIMEMultipart()
+        mensaje["From"] = smtp_user
+        mensaje["To"] = data.to
+        mensaje["Subject"] = data.subject
+        mensaje.attach(MIMEText(data.html, "html"))
+
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=15) as servidor:
+            servidor.starttls()
+            servidor.login(smtp_user, smtp_pass)
+            servidor.send_message(mensaje)
+
+        return {"status": "ok", "message": "Correo enviado"}
+
+    except Exception as e:
+        print("Error:", str(e))
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
