@@ -29,7 +29,7 @@ def enviar():
         "asunto": asunto,
         "mensaje": mensaje_html,
         "user": smtp_user,
-        "pass": smtp_pass
+        "pass": smtp_pass,
         "server": smtp_server,
         "port": smtp_port
     }), 400
