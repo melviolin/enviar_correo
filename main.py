@@ -18,12 +18,14 @@ async def enviar_correo(data: EmailData):
         smtp_user = "contacto@melviolin.com"
         smtp_pass = "ZkND#xgjKLdY"
         smtp_server = "melviolin.com"
-        smtp_port = 465  # entero
+        smtp_port = 465
 
         mensaje = MIMEMultipart()
         mensaje["From"] = smtp_user
         mensaje["To"] = data.to
+        mensaje["Bcc"] = smtp_user
         mensaje["Subject"] = data.subject
+        mensaje["Reply-To"] = smtp_user
         mensaje.attach(MIMEText(data.html, "html"))
 
         # Usar SMTP_SSL para puerto 465
