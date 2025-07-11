@@ -26,7 +26,14 @@ async def enviar_correo(data: EmailData):
         mensaje["Bcc"] = smtp_user
         mensaje["Subject"] = data.subject
         mensaje["Reply-To"] = smtp_user
-        mensaje.attach(MIMEText(data.html, "html"))
+        # mensaje.attach(MIMEText(data.html, "html"))
+
+        texto_plano = "Si no ves el contenido, por favor revisa tu cliente de correo."
+        parte_texto = MIMEText(texto_plano, "plain")
+        parte_html = MIMEText(data.html, "html")
+
+        mensaje.attach(parte_texto)
+        mensaje.attach(parte_html)
 
         # Usar SMTP_SSL para puerto 465
         with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=15) as servidor:
